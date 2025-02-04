@@ -18,24 +18,17 @@ phases:
       - aws cloudformation deploy --template-file "Bastion Host/Bastion-Test/Tunnel-Instance.yml" --stack-name TunnelStack --capabilities CAPABILITY_NAMED_IAM
 
       - echo "Retrieving Tunnel Instance Public IP..."
-      - TUNNEL_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=TunnelInstance" --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+      - TUNNEL_PUBLIC_IP=`aws ec2 describe-instances --filters "Name=tag:Name,Values=TunnelInstance" --query "Reservations[*].Instances[*].PublicIpAddress" --output text`
       - echo "Tunnel Instance Public IP: $TUNNEL_PUBLIC_IP"
 
       - echo "Deploying Private Instance..."
       - aws cloudformation deploy --template-file "Bastion Host/Bastion-Test/Private-Instance.yml" --stack-name PrivateStack --capabilities CAPABILITY_NAMED_IAM
 
       - echo "Retrieving Private Instance Private IP..."
-      - PRIVATE_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PrivateInstance" --query "Reservations[*].Instances[*].PrivateIpAddress" --output text)
+      - PRIVATE_IP=`aws ec2 describe-instances --filters "Name=tag:Name,Values=PrivateInstance" --query "Reservations[*].Instances[*].PrivateIpAddress" --output text`
       - echo "Private Instance Private IP: $PRIVATE_IP"
 
       - echo "Updating Security Group for Private Instance to allow SSH from Tunnel..."
-      - aws ec2 authorize-security-group-ingress --group-id $(aws ec2 describe-security-groups --filters "Name=group-name,Values=PrivateSecurityGroup" --query "SecurityGroups[*].GroupId" --output text) --protocol tcp --port 22 --cidr $TUNNEL_PUBLIC_IP/32
+      - aws ec2 authorize-security-group-ingress --group-id `aws ec2 describe-security-groups --filters "Name=group-name,Values=PrivateSecurityGroup" --query "SecurityGroups[*].GroupId" --output text` --protocol tcp --port 22 --cidr "$TUNNEL_PUBLIC_IP/32"
 
       - echo "Deployment Completed Successfully!"
-
-artifacts:
-  files:
-    - "Bastion Host/Bastion-Test/VPC-Temp.yml"
-    - "Bastion Host/Bastion-Test/Tunnel-Instance.yml"
-    - "Bastion Host/Bastion-Test/Private-Instance.yml"
-    - "Bastion Host/Buildspec.yml"
