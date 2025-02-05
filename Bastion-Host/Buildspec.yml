@@ -19,7 +19,9 @@ phases:
   build:
     commands:
       - echo "Deploying VPC..."
-      - aws cloudformation deploy --template-file Bastion-Host/Bastion-Test/VPC-Temp.yml --stack-name VPCStack --capabilities CAPABILITY_NAMED_IAM
+      #- aws cloudformation deploy --template-file Bastion-Host/Bastion-Test/VPC-Temp.yml --stack-name VPCStack --capabilities CAPABILITY_NAMED_IAM
+      - aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/VPC-Temp.yml
+
 
       - echo "Deploying Tunnel Instance..."
       - aws cloudformation deploy --template-file Bastion-Host/Bastion-Test/Tunnel-Instance.yml --stack-name TunnelStack --capabilities CAPABILITY_NAMED_IAM
