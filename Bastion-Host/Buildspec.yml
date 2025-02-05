@@ -24,7 +24,8 @@ phases:
 
 
       - echo "Deploying Tunnel Instance..."
-      - aws cloudformation deploy --template-file Bastion-Host/Bastion-Test/Tunnel-Instance.yml --stack-name TunnelStack --capabilities CAPABILITY_NAMED_IAM
+      #- aws cloudformation deploy --template-file Bastion-Host/Bastion-Test/Tunnel-Instance.yml --stack-name TunnelStack --capabilities CAPABILITY_NAMED_IAM
+      - aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Tunnel-Instance.yml
 
       - echo "Retrieving Tunnel Instance Public IP..."
       - |
@@ -34,7 +35,8 @@ phases:
         echo "Tunnel Instance Public IP: $TUNNEL_PUBLIC_IP"
 
       - echo "Deploying Private Instance..."
-      - aws cloudformation deploy --template-file Bastion-Host/Bastion-Test/Private-Instance.yml --stack-name PrivateStack --capabilities CAPABILITY_NAMED_IAM
+      #- aws cloudformation deploy --template-file Bastion-Host/Bastion-Test/Private-Instance.yml --stack-name PrivateStack --capabilities CAPABILITY_NAMED_IAM
+      - aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Private-Instance.yml
 
       - echo "Retrieving Private Instance Private IP..."
       - |
