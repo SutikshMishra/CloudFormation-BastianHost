@@ -1,0 +1,48 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      - echo "Installing AWS CLI..."
+      - if command -v yum > /dev/null; then yum update -y && yum install -y aws-cli; fi
+      - if command -v apt-get > /dev/null; then apt-get update && apt-get install -y awscli; fi
+      - if command -v apk > /dev/null; then apk add --no-cache aws-cli; fi
+      - aws --version  # Verify installation
+
+  pre_build:
+    commands:
+      - echo "Listing available CloudFormation templates..."
+      - ls -l Bastion-Host/Bastion-Test/  # Ensure files exist
+
+  build:
+    commands:
+      - echo "Deploying VPC..."
+      - aws cloudformation deploy --template-file "Bastion-Host/Bastion-Test/VPC-Temp.yml" --stack-name VPCStack --capabilities CAPABILITY_NAMED_IAM
+
+      - echo "Deploying Tunnel Instance..."
+      - aws cloudformation deploy --template-file "Bastion-Host/Bastion-Test/Tunnel-Instance.yml" --stack-name TunnelStack --capabilities CAPABILITY_NAMED_IAM
+
+      - echo "Retrieving Tunnel Instance Public IP..."
+      - bash -c 'TUNNEL_PUBLIC_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=TunnelInstance" --query "Reservations[*].Instances[*].PublicIpAddress" --output text) && echo "Tunnel Instance Public IP: $TUNNEL_PUBLIC_IP"'
+
+      - echo "Deploying Private Instance..."
+      - aws cloudformation deploy --template-file "Bastion-Host/Bastion-Test/Private-Instance.yml" --stack-name PrivateStack --capabilities CAPABILITY_NAMED_IAM
+
+      - echo "Retrieving Private Instance Private IP..."
+      - bash -c 'PRIVATE_IP=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=PrivateInstance" --query "Reservations[*].Instances[*].PrivateIpAddress" --output text) && echo "Private Instance Private IP: $PRIVATE_IP"'
+
+      - echo "Waiting for Tunnel Instance to be ready..."
+      - sleep 30
+
+      - echo "Updating Security Group for Private Instance..."
+      - bash -c 'aws ec2 authorize-security-group-ingress --group-id $(aws ec2 describe-security-groups --filters "Name=group-name,Values=PrivateSecurityGroup" --query "SecurityGroups[*].GroupId" --output text) --protocol tcp --port 22 --cidr $TUNNEL_PUBLIC_IP/32'
+
+  post_build:
+    commands:
+      - echo "Deployment completed successfully!"
+
+artifacts:
+  files:
+    - '**/*'
