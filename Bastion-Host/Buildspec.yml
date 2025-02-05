@@ -28,16 +28,24 @@ phases:
 
       - echo "Retrieving Tunnel Instance Public IP..."
       - |
-        TUNNEL_PUBLIC_IP=$(aws ec2 describe-instances \
-          --filters "Name=tag:Name,Values=TunnelInstance" \
-          --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+        for i in {1..10}; do
+          TUNNEL_PUBLIC_IP=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=TunnelInstance" \
+            --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+
+          if [ -n "$TUNNEL_PUBLIC_IP" ]; then
+            echo "Tunnel Instance Public IP: $TUNNEL_PUBLIC_IP"
+            break
+          fi
+
+          echo "Waiting for Tunnel Instance to be ready (attempt $i)..."
+          sleep 10
+        done
 
         if [ -z "$TUNNEL_PUBLIC_IP" ]; then
-          echo "Error: Tunnel Instance Public IP could not be retrieved. Exiting."
+          echo "Error: Tunnel Instance Public IP could not be retrieved after multiple attempts. Exiting."
           exit 1
         fi
-
-        echo "Tunnel Instance Public IP: $TUNNEL_PUBLIC_IP"
 
       - echo "Validating and Deploying Private Instance..."
       - |
