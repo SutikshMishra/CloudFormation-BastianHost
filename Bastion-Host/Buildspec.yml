@@ -14,7 +14,12 @@ phases:
   pre_build:
     commands:
       - echo "Listing available CloudFormation templates..."
-      - ls -l Bastion-Host/Bastion-Test/ || (echo "Error: Template directory not found. Exiting." && exit 1)
+      - |
+        if [ ! -d "Bastion-Host/Bastion-Test" ]; then
+          echo "Error: Template directory Bastion-Host/Bastion-Test/ not found. Exiting."
+          exit 1
+        fi
+        ls -l Bastion-Host/Bastion-Test/
 
   build:
     commands:
