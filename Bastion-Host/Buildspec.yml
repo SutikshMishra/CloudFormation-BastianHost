@@ -14,106 +14,51 @@ phases:
   pre_build:
     commands:
       - echo "Listing available CloudFormation templates..."
-      - ls -l Bastion-Host/Bastion-Test/  # Ensure files exist
+      - ls -l Bastion-Host/Bastion-Test/
 
   build:
     commands:
       - echo "Validating and Deploying VPC..."
       - |
+        echo "Validating VPC Template..."
         aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/VPC-Temp.yml || exit 1
+
+        echo "Deploying VPC..."
         aws cloudformation deploy \
           --template-file Bastion-Host/Bastion-Test/VPC-Temp.yml \
           --stack-name VPCStack \
-          --capabilities CAPABILITY_NAMED_IAM || exit 1
+          --capabilities CAPABILITY_NAMED_IAM \
+          --region us-east-1 || exit 1
+
+        echo "VPC deployment complete."
 
       - echo "Validating and Deploying Tunnel Instance..."
       - |
+        echo "Validating Tunnel Instance Template..."
         aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Tunnel-Instance.yml || exit 1
+
+        echo "Deploying Tunnel Instance..."
         aws cloudformation deploy \
           --template-file Bastion-Host/Bastion-Test/Tunnel-Instance.yml \
           --stack-name TunnelStack \
-          --capabilities CAPABILITY_NAMED_IAM || exit 1
+          --capabilities CAPABILITY_NAMED_IAM \
+          --region us-east-1 || exit 1
 
-      - echo "Retrieving Tunnel Instance Public IP..."
-      - |
-        REGION="us-east-1"  # Replace with the appropriate AWS region
-        for i in {1..10}; do
-          TUNNEL_PUBLIC_IP=$(aws ec2 describe-instances \
-            --region "$REGION" \
-            --filters "Name=tag:Name,Values=TunnelInstance" \
-            --query "Reservations[*].Instances[*].PublicIpAddress" \
-            --output text)
-
-          if [ -n "$TUNNEL_PUBLIC_IP" ]; then
-            echo "Tunnel Instance Public IP: $TUNNEL_PUBLIC_IP"
-            break
-          fi
-
-          echo "Waiting for Tunnel Instance to be ready (attempt $i)..."
-          sleep 10
-        done
-
-        if [ -z "$TUNNEL_PUBLIC_IP" ]; then
-          echo "Error: Tunnel Instance Public IP could not be retrieved after multiple attempts. Exiting."
-          aws ec2 describe-instances \
-            --region "$REGION" \
-            --query "Reservations[*].Instances[*].[InstanceId,State.Name,PublicIpAddress]" \
-            --output table
-          exit 1
-        fi
+        echo "Tunnel Instance deployment complete."
 
       - echo "Validating and Deploying Private Instance..."
       - |
+        echo "Validating Private Instance Template..."
         aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Private-Instance.yml || exit 1
+
+        echo "Deploying Private Instance..."
         aws cloudformation deploy \
           --template-file Bastion-Host/Bastion-Test/Private-Instance.yml \
           --stack-name PrivateStack \
-          --capabilities CAPABILITY_NAMED_IAM || exit 1
+          --capabilities CAPABILITY_NAMED_IAM \
+          --region us-east-1 || exit 1
 
-      - echo "Retrieving Private Instance Private IP..."
-      - |
-        PRIVATE_IP=$(aws ec2 describe-instances \
-          --region "$REGION" \
-          --filters "Name=tag:Name,Values=PrivateInstance" \
-          --query "Reservations[*].Instances[*].PrivateIpAddress" \
-          --output text)
-
-        if [ -z "$PRIVATE_IP" ]; then
-          echo "Error: Private Instance Private IP could not be retrieved. Exiting."
-          aws ec2 describe-instances \
-            --region "$REGION" \
-            --query "Reservations[*].Instances[*].[InstanceId,State.Name,PrivateIpAddress]" \
-            --output table
-          exit 1
-        fi
-
-        echo "Private Instance Private IP: $PRIVATE_IP"
-
-      - echo "Waiting for Tunnel Instance to be ready..."
-      - sleep 30
-
-      - echo "Updating Security Group for Private Instance..."
-      - |
-        SECURITY_GROUP_ID=$(aws ec2 describe-security-groups \
-          --region "$REGION" \
-          --filters "Name=group-name,Values=PrivateSecurityGroup" \
-          --query "SecurityGroups[*].GroupId" \
-          --output text)
-
-        if [ -z "$SECURITY_GROUP_ID" ]; then
-          echo "Error: PrivateSecurityGroup could not be found. Exiting."
-          aws ec2 describe-security-groups --region "$REGION" --output table
-          exit 1
-        fi
-
-        echo "Private Security Group ID: $SECURITY_GROUP_ID"
-
-        aws ec2 authorize-security-group-ingress \
-          --region "$REGION" \
-          --group-id "$SECURITY_GROUP_ID" \
-          --protocol tcp \
-          --port 22 \
-          --cidr "$TUNNEL_PUBLIC_IP/32" || exit 1
+        echo "Private Instance deployment complete."
 
   post_build:
     commands:
