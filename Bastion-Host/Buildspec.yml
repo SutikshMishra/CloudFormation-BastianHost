@@ -19,20 +19,21 @@ phases:
           echo "Error: Template directory Bastion-Host/Bastion-Test/ not found. Exiting."
           exit 1
         fi
-        ls -l Bastion-Host/Bastion-Test/
+      - ls -l Bastion-Host/Bastion-Test/
 
   build:
     commands:
-      - echo "Validating and Deploying VPC..."
+      - echo "Validating VPC Template..."
       - |
-        echo "Validating VPC Template..."
         if ! aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/VPC-Temp.yml; then
           echo "Error: VPC template validation failed. Exiting."
           aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/VPC-Temp.yml --debug
           exit 1
         fi
-        
-        echo "Deploying VPC..."
+      - echo "VPC Template validation successful."
+
+      - echo "Deploying VPC..."
+      - |
         if ! aws cloudformation deploy \
           --template-file Bastion-Host/Bastion-Test/VPC-Temp.yml \
           --stack-name VPCStack \
@@ -42,8 +43,7 @@ phases:
           aws cloudformation describe-stack-events --stack-name VPCStack --region us-east-1
           exit 1
         fi
-        echo "VPC deployment complete."
-  
+      - echo "VPC deployment complete."
 
   post_build:
     commands:
