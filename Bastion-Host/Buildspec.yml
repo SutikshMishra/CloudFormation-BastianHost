@@ -31,7 +31,7 @@ phases:
           aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/VPC-Temp.yml --debug
           exit 1
         fi
-
+        
         echo "Deploying VPC..."
         if ! aws cloudformation deploy \
           --template-file Bastion-Host/Bastion-Test/VPC-Temp.yml \
@@ -43,48 +43,7 @@ phases:
           exit 1
         fi
         echo "VPC deployment complete."
-
-      - echo "Validating and Deploying Tunnel Instance..."
-      - |
-        echo "Validating Tunnel Instance Template..."
-        if ! aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Tunnel-Instance.yml; then
-          echo "Error: Tunnel Instance template validation failed. Exiting."
-          aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Tunnel-Instance.yml --debug
-          exit 1
-        fi
-
-        echo "Deploying Tunnel Instance..."
-        if ! aws cloudformation deploy \
-          --template-file Bastion-Host/Bastion-Test/Tunnel-Instance.yml \
-          --stack-name TunnelStack \
-          --capabilities CAPABILITY_NAMED_IAM \
-          --region us-east-1; then
-          echo "Error: Tunnel Instance deployment failed. Exiting."
-          aws cloudformation describe-stack-events --stack-name TunnelStack --region us-east-1
-          exit 1
-        fi
-        echo "Tunnel Instance deployment complete."
-
-      - echo "Validating and Deploying Private Instance..."
-      - |
-        echo "Validating Private Instance Template..."
-        if ! aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Private-Instance.yml; then
-          echo "Error: Private Instance template validation failed. Exiting."
-          aws cloudformation validate-template --template-body file://Bastion-Host/Bastion-Test/Private-Instance.yml --debug
-          exit 1
-        fi
-
-        echo "Deploying Private Instance..."
-        if ! aws cloudformation deploy \
-          --template-file Bastion-Host/Bastion-Test/Private-Instance.yml \
-          --stack-name PrivateStack \
-          --capabilities CAPABILITY_NAMED_IAM \
-          --region us-east-1; then
-          echo "Error: Private Instance deployment failed. Exiting."
-          aws cloudformation describe-stack-events --stack-name PrivateStack --region us-east-1
-          exit 1
-        fi
-        echo "Private Instance deployment complete."
+  
 
   post_build:
     commands:
