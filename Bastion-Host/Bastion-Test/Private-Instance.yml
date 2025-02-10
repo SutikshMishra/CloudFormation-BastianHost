@@ -17,7 +17,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t2.micro
-      KeyName: Private-Key
+      KeyName: PrivateKey
       ImageId: ami-0e2c8caa4b6378d8c
       SubnetId: subnet-010144bfb303b7152
       SecurityGroupIds:
