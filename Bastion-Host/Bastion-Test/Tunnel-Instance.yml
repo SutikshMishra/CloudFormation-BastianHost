@@ -6,12 +6,12 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow SSH from my IP"
-      VpcId: vpc-08443a036d106568c
+      VpcId: vpc-03412c0cae236a7d1
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 122.162.145.98/32
+          CidrIp: 106.206.23.104/32
 
   TunnelInstance:
     Type: AWS::EC2::Instance
@@ -19,7 +19,7 @@ Resources:
       InstanceType: t2.micro
       KeyName: TunnelKey  # existing key pair
       ImageId: ami-0e2c8caa4b6378d8c
-      SubnetId: subnet-039a302ff3bcd44df
+      SubnetId: subnet-03f8e4a49b87154e6
       SecurityGroupIds:
         - !Ref SecurityGroup
       Tags:
