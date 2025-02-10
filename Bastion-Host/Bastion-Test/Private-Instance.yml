@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create a Private Instance accessible only from the Tunnel Instance."
+
+Resources:
+  PrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow SSH only from Tunnel Instance"
+      VpcId: vpc-03412c0cae236a7d1
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: "10.0.1.101/32"
+
+  PrivateInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      KeyName: Private-Key
+      ImageId: ami-0e2c8caa4b6378d8c
+      SubnetId: subnet-010144bfb303b7152
+      SecurityGroupIds:
+        - !Ref PrivateSecurityGroup
+      Tags:
+        - Key: Name
+          Value: "PrivateInstance"
+
+Outputs:
+  PrivateInstancePrivateIP:
+    Description: "Private IP of Private Instance"
+    Value: !GetAtt PrivateInstance.PrivateIp
