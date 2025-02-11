@@ -10,7 +10,7 @@ phases:
       - echo Setting AWS region...
       - aws configure set region us-east-1
       - echo Deploying CloudFormation VPC templates...
-      - for template in $(ls Bastion-Host/Bastion-Test/Tunnel-Instance.yml); do
+      - for template in $(ls Bastion-Host/Bastion-Test/Private-Instance.yml); do
         echo "Deploying template $template";
         aws cloudformation deploy --template-file $template --stack-name $(basename $template .yml);
         done
